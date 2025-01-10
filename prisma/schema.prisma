@@ -18,8 +18,8 @@ model User {
   id             Int           @id @default(autoincrement())
   email          String        @unique
   name           String?
-  subscriptionid Int?
-  subscription   Subscription? @relation(fields: [subscriptionid], references: [id])
+  subscriptionId Int?          @unique
+  subscription   Subscription?
 }
 
 model Subscription {
@@ -27,8 +27,8 @@ model Subscription {
   endpoint       String
   expirationTime Int
   keys           Keys?
-
-  User User[]
+  userId         Int?   @unique
+  User           User?  @relation(fields: [userId], references: [id])
 }
 
 model Keys {

@@ -13,6 +13,20 @@ webpush.setVapidDetails(
 let subscription: webpush.PushSubscription | null = null;
 
 export async function subscribeUser(sub: webpush.PushSubscription) {
+  const userCookies = await cookies();
+  const userId = userCookies.get('userId');
+  if (userId) {
+    await prisma.user.findFirst({
+      where: {
+        id: parseInt(userId.value),
+      },
+      include: {
+        subscription: {
+          select: { id: true },
+        },
+      },
+    });
+  }
   subscription = sub;
   const user = await prisma.user.create({
     data: {
@@ -32,7 +46,6 @@ export async function subscribeUser(sub: webpush.PushSubscription) {
       },
     },
   });
-  const userCookies = await cookies();
   userCookies.set('userId', '' + user.id);
   // In a production environment, you would want to store the subscription in a database
   // For example: await db.subscriptions.create({ data: sub })
@@ -48,11 +61,26 @@ export async function unsubscribeUser() {
       console.error('Invalid user id:', userId);
       return { success: false, error: 'Invalid user id' };
     }
-    await prisma.user.delete({
+    const user = await prisma.user.findFirst({
       where: {
-        id,
+        id: id,
+      },
+      include: {
+        subscription: {
+          select: { id: true },
+        },
       },
     });
+    if (!user) {
+      console.error('User not found:', id);
+    }
+    if (user?.subscription) {
+      await prisma.subscription.delete({
+        where: {
+          id: user.subscription.id,
+        },
+      });
+    }
   }
   subscription = null;
   // In a production environment, you would want to remove the subscription from the database
