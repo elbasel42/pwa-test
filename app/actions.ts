@@ -2,6 +2,7 @@
 
 import webpush from 'web-push';
 import { prisma } from './lib/prisma';
+import { cookies } from 'next/headers';
 
 webpush.setVapidDetails(
   'mailto:abdelrahman.elbasel42@gmail.com',
@@ -13,24 +14,46 @@ let subscription: webpush.PushSubscription | null = null;
 
 export async function subscribeUser(sub: webpush.PushSubscription) {
   subscription = sub;
-  await prisma.subscription.create({
+  const user = await prisma.user.create({
     data: {
-      endpoint: sub.endpoint,
-      expirationTime: sub.expirationTime ?? 0,
-      keys: {
+      email: '',
+      name: '',
+      subscription: {
         create: {
-          p256dh: sub.keys.p256dh,
-          auth: sub.keys.auth,
+          endpoint: sub.endpoint,
+          expirationTime: sub.expirationTime ?? 0,
+          keys: {
+            create: {
+              p256dh: sub.keys.p256dh,
+              auth: sub.keys.auth,
+            },
+          },
         },
       },
     },
   });
+  const userCookies = await cookies();
+  userCookies.set('userId', '' + user.id);
   // In a production environment, you would want to store the subscription in a database
   // For example: await db.subscriptions.create({ data: sub })
   return { success: true };
 }
 
 export async function unsubscribeUser() {
+  const userCookies = await cookies();
+  const userId = userCookies.get('userId');
+  if (userId && typeof userId === 'string') {
+    const id = parseInt(userId);
+    if (isNaN(id)) {
+      console.error('Invalid user id:', userId);
+      return { success: false, error: 'Invalid user id' };
+    }
+    await prisma.user.delete({
+      where: {
+        id,
+      },
+    });
+  }
   subscription = null;
   // In a production environment, you would want to remove the subscription from the database
   // For example: await db.subscriptions.delete({ where: { ... } })

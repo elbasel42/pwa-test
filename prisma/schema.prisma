@@ -10,8 +10,16 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int           @id @default(autoincrement())
+  email          String        @unique
+  name           String?
+  subscriptionid Int?
+  subscription   Subscription? @relation(fields: [subscriptionid], references: [id])
 }
 
 model Subscription {
@@ -19,6 +27,8 @@ model Subscription {
   endpoint       String
   expirationTime Int
   keys           Keys?
+
+  User User[]
 }
 
 model Keys {
