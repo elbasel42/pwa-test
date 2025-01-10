@@ -16,8 +16,9 @@ export async function subscribeUser(sub: webpush.PushSubscription) {
   const userCookies = await cookies();
   const userIdCookie = userCookies.get('userId');
   const userId = userIdCookie?.value;
+  let usedIdParsed: number | undefined;
   if (userId) {
-    const usedIdParsed = parseInt(userId);
+    usedIdParsed = parseInt(userId);
 
     if (userId) {
       await prisma.subscription.create({
@@ -36,6 +37,7 @@ export async function subscribeUser(sub: webpush.PushSubscription) {
       });
       return;
     }
+  }
 
   subscription = sub;
   const user = await prisma.user.create({
