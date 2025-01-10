@@ -14,19 +14,29 @@ let subscription: webpush.PushSubscription | null = null;
 
 export async function subscribeUser(sub: webpush.PushSubscription) {
   const userCookies = await cookies();
-  const userId = userCookies.get('userId');
+  const userIdCookie = userCookies.get('userId');
+  const userId = userIdCookie?.value;
   if (userId) {
-    await prisma.user.findFirst({
-      where: {
-        id: parseInt(userId.value),
-      },
-      include: {
-        subscription: {
-          select: { id: true },
+    const usedIdParsed = parseInt(userId);
+
+    if (userId) {
+      await prisma.subscription.create({
+        data: {
+          userId: usedIdParsed,
+          endpoint: sub.endpoint,
+          expirationTime: sub.expirationTime ?? 0,
+          keys: {
+            create: {
+              userId: usedIdParsed,
+              p256dh: sub.keys.p256dh,
+              auth: sub.keys.auth,
+            },
+          },
         },
-      },
-    });
-  }
+      });
+      return;
+    }
+
   subscription = sub;
   const user = await prisma.user.create({
     data: {
@@ -38,6 +48,7 @@ export async function subscribeUser(sub: webpush.PushSubscription) {
           expirationTime: sub.expirationTime ?? 0,
           keys: {
             create: {
+              userId: usedIdParsed,
               p256dh: sub.keys.p256dh,
               auth: sub.keys.auth,
             },
@@ -75,11 +86,17 @@ export async function unsubscribeUser() {
       console.error('User not found:', id);
     }
     if (user?.subscription) {
+      const userIdParsed = parseInt(userId);
+      await prisma.keys.delete({
+        where: {
+          userId: userIdParsed
+        }
+      })
       await prisma.subscription.delete({
         where: {
-          id: user.subscription.id,
-        },
-      });
+            userId: userIdParsed
+        }
+      })
     }
   }
   subscription = null;

@@ -19,22 +19,27 @@ model User {
   email          String        @unique
   name           String?
   subscriptionId Int?          @unique
+  keysId         Int?          @unique
   subscription   Subscription?
+  keys           Keys[]
 }
 
 model Subscription {
   id             Int    @id @default(autoincrement())
   endpoint       String
   expirationTime Int
-  keys           Keys?
   userId         Int?   @unique
-  User           User?  @relation(fields: [userId], references: [id])
+  keyId          Int?   @unique
+  keys           Keys?
+  user           User?  @relation(fields: [userId], references: [id])
 }
 
 model Keys {
   id             Int          @id @default(autoincrement())
   p256dh         String
   auth           String
+  userId         Int?         @unique
   subscriptionId Int          @unique
   subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+  user           User?        @relation(fields: [userId], references: [id])
 }
