@@ -15,13 +15,12 @@ datasource db {
 }
 
 model User {
-  id             Int           @id @default(autoincrement())
-  email          String        @unique
-  name           String?
-  subscriptionId Int?          @unique
-  keysId         Int?          @unique
+  id             Int            @id @default(autoincrement())
+  subscriptionId Int?           @unique
+  keysId         Int?           @unique
   subscription   Subscription?
   keys           Keys[]
+  notifications  Notification[]
 }
 
 model Subscription {
@@ -42,4 +41,14 @@ model Keys {
   subscriptionId Int          @unique
   subscription   Subscription @relation(fields: [subscriptionId], references: [id])
   user           User?        @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  title     String
+  body      String
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -21,6 +21,7 @@ function PushNotificationManager() {
   const [subscription, setSubscription] = useState<PushSubscription | null>(
     null
   );
+  const [msgList, setMsgList] = useState<string[]>([]);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -61,6 +62,7 @@ function PushNotificationManager() {
   async function sendTestNotification() {
     if (subscription) {
       await sendNotification(message);
+      setMsgList((prev) => [...prev, message]);
       setMessage('');
     }
   }
@@ -71,6 +73,12 @@ function PushNotificationManager() {
 
   return (
     <div>
+      <div>
+        {msgList.map((msg, index) => {
+          return <p key={index}>{msg}</p>;  
+        })}
+
+      </div>
       <h3>Push Notifications</h3>
       {subscription ? (
         <>
@@ -135,6 +143,7 @@ export default function Page() {
   return (
     <div>
       <PushNotificationManager />
+      {/* <div>{messages.map(() => {})}</div> */}
       <InstallPrompt />
     </div>
   );
