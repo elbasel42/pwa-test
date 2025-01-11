@@ -75,9 +75,8 @@ function PushNotificationManager() {
     <div>
       <div>
         {msgList.map((msg, index) => {
-          return <p key={index}>{msg}</p>;  
+          return <p key={index}>{msg}</p>;
         })}
-
       </div>
       <h3>Push Notifications</h3>
       {subscription ? (
